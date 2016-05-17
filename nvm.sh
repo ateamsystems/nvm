@@ -827,10 +827,13 @@ nvm_ls_remote() {
   PATTERN="$1"
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -n1)"
+#    nvm_echo "TEST"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
+#    nvm_echo "TEST1"
   else
     PATTERN=".*"
+#    nvm_echo "TEST2"
   fi
   nvm_ls_remote_index_tab node std "$NVM_NODEJS_ORG_MIRROR" "$PATTERN"
 }
@@ -884,13 +887,23 @@ nvm_ls_remote_index_tab() {
     ZHS_HAS_SHWORDSPLIT_UNSET=$(setopt | command grep shwordsplit > /dev/null ; nvm_echo $?)
     setopt shwordsplit
   fi
-  VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
+  NVM_OS="$(nvm_get_os)"
+  if [ "_$NVM_OS" == "_freebsd" ]; then
+#    nvm_echo "PATTERN" $PATTERN
+#    nvm_echo "TYPE" $TYPE
+    if [ $TYPE == "node" ]; then
+#	VERSIONS="$(pkg search -c "V8 JavaScript for client and server" | awk '{print $1}' | grep -v "devel" | cut -d'-' -f2 | grep -w "$PATTERN" | $SORT_COMMAND)"
+	VERSIONS="$(pkg search "^node-[0-9]|node[0-9]" | awk '{print $1}' | cut -d'-' -f2 | sed -e 's/^\([0-9]\)/v\1/g'| grep -w "$PATTERN" | $SORT_COMMAND)"
+    fi
+  else
+    VERSIONS="$(nvm_download -L -s "$MIRROR/index.tab" -o - \
     | command sed "
         1d;
         s/^/$PREFIX/;
         s/[[:blank:]].*//" \
     | command grep -w "$PATTERN" \
     | $SORT_COMMAND)"
+  fi
   if [ "$ZHS_HAS_SHWORDSPLIT_UNSET" -eq 1 ] && nvm_has "unsetopt"; then
     unsetopt shwordsplit
   fi
@@ -1727,6 +1740,8 @@ nvm() {
       NVM_IOJS_PREFIX="$(nvm_iojs_prefix)"
       local NVM_NODE_PREFIX
       NVM_NODE_PREFIX="$(nvm_node_prefix)"
+      local NVM_OS
+      NVM_OS="$(nvm_get_os)"
       nvm_echo
       nvm_echo "Node Version Manager"
       nvm_echo
@@ -1738,7 +1753,11 @@ nvm() {
       nvm_echo 'Usage:'
       nvm_echo '  nvm --help                                Show this message'
       nvm_echo '  nvm --version                             Print out the latest released version of nvm'
-      nvm_echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
+      if [ "_$NVM_OS" == "_freebsd" ]; then
+	  nvm_echo '  nvm install <version>                     Download and install a <version>. Uses .nvmrc if available'
+      else
+	  nvm_echo '  nvm install [-s] <version>                Download and install a <version>, [-s] from source. Uses .nvmrc if available'
+      fi
       nvm_echo '    --reinstall-packages-from=<version>     When installing, reinstall packages installed in <node|iojs|node version number>'
       nvm_echo '  nvm uninstall <version>                   Uninstall a version'
       nvm_echo '  nvm use [--silent] <version>              Modify PATH to use <version>. Uses .nvmrc if available'
@@ -1930,7 +1949,7 @@ nvm() {
         if [ -z "${NVM_MAKE_JOBS-}" ]; then
           nvm_get_make_jobs
         fi
-        if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ]; then
+        if [ "$NVM_IOJS" != true ] &&  [ "$NVM_NODE_MERGED" != true ] && [ "_$NVM_OS" != "_freebsd" ]; then
           if nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"; then
             NVM_INSTALL_SUCCESS=true
           fi
@@ -1942,6 +1961,10 @@ nvm() {
          # nvm_install_merged_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
          nvm_err 'Installing node v1.0 and greater from source is not currently supported'
          return 106
+        elif [ "_$NVM_OS" = "_freebsd" ]; then
+         # nvm_install_node_source "$VERSION" "$NVM_MAKE_JOBS" "$ADDITIONAL_PARAMETERS"
+         nvm_err 'Installing node from source is not currently supported in FreeBSD'
+         return 107
         fi
       fi
 
