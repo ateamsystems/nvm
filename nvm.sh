@@ -1383,6 +1383,43 @@ nvm_install_node_binary() {
 
   if [ -n "$NVM_OS" ]; then
     if nvm_binary_available "$VERSION"; then
+      if [ "_$NVM_OS" = "_freebsd" ]; then
+	 local version
+	 local pattern
+	 command mkdir -p $NVM_DIR/versions/node
+	 command mkdir -p $NVM_DIR/src
+	 command mkdir -p $NVM_DIR/alias
+	 command mkdir -p $NVM_DIR/tmp_install_dir
+	 pattern="$(echo $VERSION | sed -e 's/^v\([0-9]\)/\1/g')"
+	 version="$(pkg search "^node-[0-9]|node[0-9]" | awk '{print $1}' | grep -w "$pattern")"
+	 nvm_echo "Installing ... $version"
+	 command mkdir -p $NVM_DIR/tmp_install_dir/$VERSION
+	 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y python2 python27 $version
+	 command mkdir -p $NVM_DIR/versions/node/$VERSION
+	 command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
+
+	 # To install npm version
+	 local npm
+	 for npm in `cat /tmp/npm_pkgs`
+	 do
+	     command rm -rf /tmp/var
+	     nvm_echo "Checking npm version $npm"
+	     local NODE_VER
+	     NODE_VER="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
+
+	     nvm_echo "Checking node version $NODE_VER"
+
+	     if [ "$NODE_VER" == "$pattern" ]; then
+		 nvm_echo "Installing ... $npm"
+		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
+		 command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+		 break
+	     fi
+	 done
+	 return 0
+      fi
+
       local NVM_ARCH
       NVM_ARCH="$(nvm_get_arch)"
       if [ "_$NVM_ARCH" = '_armv6l' ] || [ "_$NVM_ARCH" = 'armv7l' ]; then
@@ -1933,7 +1970,9 @@ nvm() {
       local NVM_INSTALL_SUCCESS
       # skip binary install if "nobinary" option specified.
       if [ $nobinary -ne 1 ] && nvm_binary_available "$VERSION"; then
-        if [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+        if [ "_$NVM_OS" = "_freebsd" ] && nvm_install_node_binary "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
+         NVM_INSTALL_SUCCESS=true
+        elif [ "$NVM_IOJS" = true ] && nvm_install_iojs_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
         elif [ "$NVM_NODE_MERGED" = true ] && nvm_install_merged_node_binary std "$VERSION" "$REINSTALL_PACKAGES_FROM"; then
           NVM_INSTALL_SUCCESS=true
@@ -2027,13 +2066,39 @@ nvm() {
         return 1
       fi
 
+      if [ "_$NVM_OS" = "_freebsd" ]; then
+	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
+         # To remove/deinstall npm version
+	 local npm
+	 for npm in `cat /tmp/npm_pkgs`
+	 do
+	     nvm_echo "Checking npm version $npm"
+	     local NODE_VER
+	     NODE_VER="$(pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -n $npm | grep node | awk '{print $2}')"
+
+	     # if we receive empty output here then it is time to remove
+	     if [ -z $NODE_VER ]; then
+		 nvm_echo "Installed npm version $npm"
+		 nvm_echo "Removing ... $npm"
+		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION remove -y $npm
+		 command rm -rf $NVM_DIR/versions/node/$VERSION/lib/node_modules/*
+		 break
+	     fi
+	 done
+
+	 nvm_echo "Removing node version ... $VERSION"
+	 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION remove -y \*
+	 command rm -rf $NVM_DIR/tmp_install_dir/$VERSION
+	 command rm -rf $NVM_DIR/versions/node/$VERSION
+      fi
+
       # Delete all files related to target version.
       command rm -rf "$NVM_DIR/src/$NVM_PREFIX-$VERSION" \
              "$NVM_DIR/src/$NVM_PREFIX-$VERSION.tar.*" \
              "$NVM_DIR/bin/$NVM_PREFIX-${t}" \
              "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.*" \
              "$VERSION_PATH" 2>/dev/null
-     nvm_echo "$NVM_SUCCESS_MSG"
+      nvm_echo "$NVM_SUCCESS_MSG"
 
       # rm any aliases that point to uninstalled version.
       for ALIAS in $(command grep -l "$VERSION" "$(nvm_alias_path)/*" 2>/dev/null)
