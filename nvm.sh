@@ -2066,6 +2066,8 @@ nvm() {
         return 1
       fi
 
+      local NVM_OS
+      NVM_OS="$(nvm_get_os)"
       if [ "_$NVM_OS" = "_freebsd" ]; then
 	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
          # To remove/deinstall npm version
