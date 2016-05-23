@@ -1395,8 +1395,17 @@ nvm_install_node_binary() {
 	 nvm_echo "Installing ... $version"
 	 command mkdir -p $NVM_DIR/tmp_install_dir/$VERSION
 	 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y python2 python27 $version
-	 command mkdir -p $NVM_DIR/versions/node/$VERSION
-	 command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+
+	 local version010
+	 version010="$(echo $VERSION | grep "0.10.")"
+	 # if not 0.10.x then install in regular place
+	 if [ -z $version010 ]; then
+	     command mkdir -p $NVM_DIR/versions/node/$VERSION
+	     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+	 else
+	     command mkdir -p $NVM_DIR/$VERSION
+	     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
+	 fi
 	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
 
 	 # To install npm version
@@ -1413,7 +1422,12 @@ nvm_install_node_binary() {
 	     if [ "$NODE_VER" == "$pattern" ]; then
 		 nvm_echo "Installing ... $npm"
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
-		 command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+
+		 if [ -z $version010 ]; then
+		     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+		 else
+		     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
+		 fi
 		 break
 	     fi
 	 done
@@ -2069,6 +2083,9 @@ nvm() {
       local NVM_OS
       NVM_OS="$(nvm_get_os)"
       if [ "_$NVM_OS" = "_freebsd" ]; then
+	 local version010
+	 version010="$(echo $VERSION | grep "0.10.")"
+
 	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
          # To remove/deinstall npm version
 	 local npm
@@ -2083,7 +2100,12 @@ nvm() {
 		 nvm_echo "Installed npm version $npm"
 		 nvm_echo "Removing ... $npm"
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION remove -y $npm
-		 command rm -rf $NVM_DIR/versions/node/$VERSION/lib/node_modules/*
+		 # if not 0.10.x then install in regular place
+		 if [ -z $version010 ]; then
+		     command rm -rf $NVM_DIR/versions/node/$VERSION/lib/node_modules/*
+		 else
+		     command rm -rf $NVM_DIR/$VERSION/lib/node_modules/*
+		 fi
 		 break
 	     fi
 	 done
@@ -2091,7 +2113,12 @@ nvm() {
 	 nvm_echo "Removing node version ... $VERSION"
 	 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION remove -y \*
 	 command rm -rf $NVM_DIR/tmp_install_dir/$VERSION
-	 command rm -rf $NVM_DIR/versions/node/$VERSION
+	 # if not 0.10.x then install in regular place
+	 if [ -z $version010 ]; then
+	     command rm -rf $NVM_DIR/versions/node/$VERSION
+	 else
+	     command rm -rf $NVM_DIR/$VERSION
+	 fi
       fi
 
       # Delete all files related to target version.
