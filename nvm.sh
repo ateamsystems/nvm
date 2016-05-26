@@ -1406,11 +1406,12 @@ nvm_install_node_binary() {
 	     command mkdir -p $NVM_DIR/$VERSION
 	     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
 	 fi
-	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
+	 local npm_pkgs
+	 npm_pkgs="$(pkg search -c "Node package manager" | awk '{print $1}')"
 
 	 # To install npm version
 	 local npm
-	 for npm in `cat /tmp/npm_pkgs`
+	 for npm in $npm_pkgs
 	 do
 	     command rm -rf /tmp/var
 	     nvm_echo "Checking npm version $npm"
@@ -2085,11 +2086,11 @@ nvm() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
 	 local version010
 	 version010="$(echo $VERSION | grep "0.10.")"
-
-	 command pkg search -c "Node package manager" | awk '{print $1}' > /tmp/npm_pkgs
+	 local npm_pkgs
+	 npm_pkgs="$(pkg search -c "Node package manager" | awk '{print $1}')"
          # To remove/deinstall npm version
 	 local npm
-	 for npm in `cat /tmp/npm_pkgs`
+	 for npm in $npm_pkgs
 	 do
 	     nvm_echo "Checking npm version $npm"
 	     local NODE_VER
