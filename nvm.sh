@@ -466,7 +466,7 @@ nvm_print_formatted_alias() {
       ALIAS_FORMAT='\033[0;34m%s\033[0m'
       DEST_FORMAT='\033[0;34m%s\033[0m'
       VERSION_FORMAT='\033[0;34m%s\033[0m'
-    elif [ "_$VERSION" = '_∞' ] || [ "_$VERSION" = '_N/A' ]; then
+    elif [ "_$VERSION" = '_???' ] || [ "_$VERSION" = '_N/A' ]; then
       ALIAS_FORMAT='\033[1;31m%s\033[0m'
       DEST_FORMAT='\033[1;31m%s\033[0m'
       VERSION_FORMAT='\033[1;31m%s\033[0m'
@@ -592,7 +592,7 @@ nvm_resolve_alias() {
 
     if [ -n "$ALIAS_TEMP" ] \
       && command printf "$SEEN_ALIASES" | command grep -e "^$ALIAS_TEMP$" > /dev/null; then
-      ALIAS="∞"
+      ALIAS="???"
       break
     fi
 
@@ -606,7 +606,7 @@ nvm_resolve_alias() {
     local NVM_NODE_PREFIX
     NVM_NODE_PREFIX="$(nvm_node_prefix)"
     case "_$ALIAS" in
-      "_∞" | \
+      "_???" | \
       "_$NVM_IOJS_PREFIX" | "_$NVM_IOJS_PREFIX-" | \
       "_$NVM_NODE_PREFIX" )
         nvm_echo "$ALIAS"
@@ -641,7 +641,7 @@ nvm_resolve_local_alias() {
   if [ -z "$VERSION" ]; then
     return $EXIT_CODE
   fi
-  if [ "_$VERSION" != "_∞" ]; then
+  if [ "_$VERSION" != "_???" ]; then
     nvm_version "$VERSION"
   else
     nvm_echo "$VERSION"
@@ -1417,11 +1417,11 @@ nvm_install_node_binary() {
 	     nvm_echo "Checking npm version $npm"
 	     local NODE_VER
 	     NODE_VER="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
-
-	     nvm_echo "Checking node version $NODE_VER"
+	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
+	     nvm_echo "Checking node version --$NODE_VER--"
 
 	     if [ "$NODE_VER" == "$pattern" ]; then
-		 nvm_echo "Installing ... $npm"
+		 nvm_echo "Installing ... --$npm--"
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
 
 		 if [ -z $version010 ]; then
@@ -2220,7 +2220,7 @@ nvm() {
           fi
           return 127
         fi
-      elif [ "_$VERSION" = "_∞" ]; then
+      elif [ "_$VERSION" = "_???" ]; then
         if [ $NVM_USE_SILENT -ne 1 ]; then
           nvm_err "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting."
         fi
@@ -2520,7 +2520,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
           nvm_err 'System version of node not found.'
           return 127
         fi
-      elif [ "_$VERSION" = "_∞" ]; then
+      elif [ "_$VERSION" = "_???" ]; then
         nvm_err "The alias \"$2\" leads to an infinite loop. Aborting."
         return 8
       fi
