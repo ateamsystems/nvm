@@ -1417,7 +1417,7 @@ nvm_install_node_binary() {
 	     nvm_echo "Checking npm version $npm"
 	     local NODE_VER
 	     NODE_VER="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
-	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
+	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print \$2}'"
 	     nvm_echo "Checking node version --$NODE_VER--"
 
 	     if [ "$NODE_VER" == "$pattern" ]; then
