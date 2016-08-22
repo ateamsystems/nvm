@@ -1401,10 +1401,10 @@ nvm_install_node_binary() {
 	 # if not 0.10.x then install in regular place
 	 if [ -z $version010 ]; then
 	     command mkdir -p $NVM_DIR/versions/node/$VERSION
-	     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+	     command cp -RpP $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
 	 else
 	     command mkdir -p $NVM_DIR/$VERSION
-	     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
+	     command cp -RpP $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
 	 fi
 	 local npm_pkgs
 	 npm_pkgs="$(pkg search -c "Node package manager" | awk '{print $1}')"
@@ -1425,9 +1425,9 @@ nvm_install_node_binary() {
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
 
 		 if [ -z $version010 ]; then
-		     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
+		     command cp -RpP $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
 		 else
-		     command cp -Rp $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
+		     command cp -RpP $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/$VERSION/
 		 fi
 		 break
 	     fi
