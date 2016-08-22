@@ -1411,16 +1411,16 @@ nvm_install_node_binary() {
 
 	 # To install npm version
 	 local npm
+	 local node_ver
 	 for npm in $npm_pkgs
 	 do
 	     command rm -rf /tmp/var
 	     nvm_echo "Checking npm version $npm"
-	     local NODE_VER
-	     NODE_VER="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
+	     node_ver="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
 	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print \$2}'"
-	     nvm_echo "Checking node version --$NODE_VER--"
+	     nvm_echo "Checking node version --$node_ver--"
 
-	     if [ "$NODE_VER" == "$pattern" ]; then
+	     if [ "$node_ver" == "$pattern" ]; then
 		 nvm_echo "Installing ... --$npm--"
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
 
@@ -2090,14 +2090,14 @@ nvm() {
 	 npm_pkgs="$(pkg search -c "Node package manager" | awk '{print $1}')"
          # To remove/deinstall npm version
 	 local npm
+	 local node_ver
 	 for npm in $npm_pkgs
 	 do
 	     nvm_echo "Checking npm version $npm"
-	     local NODE_VER
-	     NODE_VER="$(pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -n $npm | grep node | awk '{print $2}')"
+	     node_ver="$(pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -n $npm | grep node | awk '{print $2}')"
 
 	     # if we receive empty output here then it is time to remove
-	     if [ -z $NODE_VER ]; then
+	     if [ -z $node_ver ]; then
 		 nvm_echo "Installed npm version $npm"
 		 nvm_echo "Removing ... $npm"
 		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION remove -y $npm
