@@ -1386,18 +1386,42 @@ nvm_install_node_binary() {
       if [ "_$NVM_OS" = "_freebsd" ]; then
 	 local version
 	 local pattern
+	 local PKG_EXIT_CODE
+	 local libuv_exist
 	 command mkdir -p $NVM_DIR/versions/node
 	 command mkdir -p $NVM_DIR/src
 	 command mkdir -p $NVM_DIR/alias
 	 command mkdir -p $NVM_DIR/tmp_install_dir
+	 if [ "$(pkg info | grep libuv)" == '' ]; then
+	     nvm_echo "Some node version need libuv package at system level, installing libuv from packages ..."
+	     pkg install -y libuv
+             PKG_EXIT_CODE=$?
+             if [ "$PKG_EXIT_CODE" != "0" ]; then
+                 return $PKG_EXIT_CODE
+             fi
+	 fi
+	 if [ "$(pkg info | grep c-ares)" == '' ]; then
+	     nvm_echo "Some node version need c-ares package at system level, installing c-ares from packages ..."
+	     pkg install -y c-ares
+             PKG_EXIT_CODE=$?
+             if [ "$PKG_EXIT_CODE" != "0" ]; then
+                 return $PKG_EXIT_CODE
+             fi
+	 fi
 	 pattern="$(echo $VERSION | sed -e 's/^v\([0-9]\)/\1/g')"
+	 nvm_echo "Pattern: --$pattern--"
 	 version="$(pkg search "^node-[0-9]|node[0-9]" | awk '{print $1}' | grep -w "$pattern")"
-	 nvm_echo "Installing ... $version"
+	 nvm_echo "Installing ... --$version--"
 	 command mkdir -p $NVM_DIR/tmp_install_dir/$VERSION
-	 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y python2 python27 $version
+	 pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y python2 python27 $version
+         PKG_EXIT_CODE=$?
+         if [ "$PKG_EXIT_CODE" != "0" ]; then
+             return $PKG_EXIT_CODE
+         fi
 
 	 local version010
 	 version010="$(echo $VERSION | grep "0.10.")"
+	 nvm_echo "Version010 if exist: --$version010--"
 	 # if not 0.10.x then install in regular place
 	 if [ -z $version010 ]; then
 	     command mkdir -p $NVM_DIR/versions/node/$VERSION
@@ -1409,20 +1433,33 @@ nvm_install_node_binary() {
 	 local npm_pkgs
 	 npm_pkgs="$(pkg search -c "Node package manager" | awk '{print $1}')"
 
+	 nvm_echo "npm packages:"
+	 nvm_echo "-------------"
+	 nvm_echo "$npm_pkgs"
+	 nvm_echo "-------------"
+
 	 # To install npm version
 	 local npm
 	 local node_ver
+	 local npm_exist
+	 npm_exist="0"
 	 for npm in $npm_pkgs
 	 do
 	     command rm -rf /tmp/var
-	     nvm_echo "Checking npm version $npm"
-	     node_ver="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}')"
-	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print \$2}'"
+	     nvm_echo "Checking corresponding npm version --$npm--"
+	     node_ver="$(pkg -r /tmp install -n $npm | grep node | awk '{print $2}' | grep '[0-9._]')"
+	     nvm_echo "Node version check command: pkg -r /tmp install -n $npm | grep node | awk '{print \$2}' | grep '[0-9._]'"
 	     nvm_echo "Checking node version --$node_ver--"
 
 	     if [ "$node_ver" == "$pattern" ]; then
+		 npm_exist="1"
+		 nvm_echo "$version has --$npm-- in packages"
 		 nvm_echo "Installing ... --$npm--"
-		 command pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
+		 pkg -r $NVM_DIR/tmp_install_dir/$VERSION install -y $npm
+	         PKG_EXIT_CODE=$?
+        	 if [ "$PKG_EXIT_CODE" != "0" ]; then
+	             return $PKG_EXIT_CODE
+        	 fi
 
 		 if [ -z $version010 ]; then
 		     command cp -RpP $NVM_DIR/tmp_install_dir/$VERSION/usr/local/* $NVM_DIR/versions/node/$VERSION/
@@ -1432,6 +1469,9 @@ nvm_install_node_binary() {
 		 break
 	     fi
 	 done
+	 if [ "$npm_exist" == "0" ]; then
+	     nvm_echo "$version doesn't have corresponding npm version!"
+	 fi
 	 return 0
       fi
 
