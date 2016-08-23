@@ -1392,8 +1392,16 @@ nvm_install_node_binary() {
 	 command mkdir -p $NVM_DIR/src
 	 command mkdir -p $NVM_DIR/alias
 	 command mkdir -p $NVM_DIR/tmp_install_dir
+	 if [ "$(pkg info | grep openssl)" == '' ]; then
+	     nvm_echo "Some node version needs openssl package at system level, installing from packages ..."
+	     pkg install -y openssl
+             PKG_EXIT_CODE=$?
+             if [ "$PKG_EXIT_CODE" != "0" ]; then
+                 return $PKG_EXIT_CODE
+             fi
+	 fi
 	 if [ "$(pkg info | grep libuv)" == '' ]; then
-	     nvm_echo "Some node version need libuv package at system level, installing libuv from packages ..."
+	     nvm_echo "Some node version needs libuv package at system level, installing from packages ..."
 	     pkg install -y libuv
              PKG_EXIT_CODE=$?
              if [ "$PKG_EXIT_CODE" != "0" ]; then
@@ -1401,7 +1409,7 @@ nvm_install_node_binary() {
              fi
 	 fi
 	 if [ "$(pkg info | grep c-ares)" == '' ]; then
-	     nvm_echo "Some node version need c-ares package at system level, installing c-ares from packages ..."
+	     nvm_echo "Some node version needs c-ares package at system level, installing from packages ..."
 	     pkg install -y c-ares
              PKG_EXIT_CODE=$?
              if [ "$PKG_EXIT_CODE" != "0" ]; then
