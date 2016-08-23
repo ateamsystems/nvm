@@ -641,7 +641,7 @@ nvm_resolve_local_alias() {
   if [ -z "$VERSION" ]; then
     return $EXIT_CODE
   fi
-  if [ "_$VERSION" != "∞" ]; then
+  if [ "_$VERSION" != "_∞" ]; then
     nvm_version "$VERSION"
   else
     nvm_echo "$VERSION"
@@ -2268,7 +2268,7 @@ nvm() {
           fi
           return 127
         fi
-      elif [ "_$VERSION" = "∞" ]; then
+      elif [ "_$VERSION" = "_∞" ]; then
         if [ $NVM_USE_SILENT -ne 1 ]; then
           nvm_err "The alias \"$PROVIDED_VERSION\" leads to an infinite loop. Aborting."
         fi
@@ -2568,7 +2568,7 @@ $NVM_LS_REMOTE_POST_MERGED_OUTPUT" | command grep -v "N/A" | command sed '/^$/d'
           nvm_err 'System version of node not found.'
           return 127
         fi
-      elif [ "_$VERSION" = "∞" ]; then
+      elif [ "_$VERSION" = "_∞" ]; then
         nvm_err "The alias \"$2\" leads to an infinite loop. Aborting."
         return 8
       fi
