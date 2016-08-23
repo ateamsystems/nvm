@@ -2173,7 +2173,7 @@ nvm() {
              "$NVM_DIR/bin/$NVM_PREFIX-${t}" \
              "$NVM_DIR/bin/$NVM_PREFIX-${t}.tar.*" \
              "$VERSION_PATH" 2>/dev/null
-      nvm_echo "$NVM_SUCCESS_MSG"
+     nvm_echo "$NVM_SUCCESS_MSG"
 
       # rm any aliases that point to uninstalled version.
       for ALIAS in $(command grep -l "$VERSION" "$(nvm_alias_path)/*" 2>/dev/null)
