@@ -827,13 +827,10 @@ nvm_ls_remote() {
   PATTERN="$1"
   if nvm_validate_implicit_alias "$PATTERN" 2> /dev/null ; then
     PATTERN="$(nvm_ls_remote "$(nvm_print_implicit_alias remote "$PATTERN")" | command tail -n1)"
-#    nvm_echo "TEST"
   elif [ -n "$PATTERN" ]; then
     PATTERN="$(nvm_ensure_version_prefix "$PATTERN")"
-#    nvm_echo "TEST1"
   else
     PATTERN=".*"
-#    nvm_echo "TEST2"
   fi
   nvm_ls_remote_index_tab node std "$NVM_NODEJS_ORG_MIRROR" "$PATTERN"
 }
