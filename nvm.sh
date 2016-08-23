@@ -466,7 +466,7 @@ nvm_print_formatted_alias() {
       ALIAS_FORMAT='\033[0;34m%s\033[0m'
       DEST_FORMAT='\033[0;34m%s\033[0m'
       VERSION_FORMAT='\033[0;34m%s\033[0m'
-    elif [ "_$VERSION" = '∞' ] || [ "_$VERSION" = '_N/A' ]; then
+    elif [ "_$VERSION" = '_∞' ] || [ "_$VERSION" = '_N/A' ]; then
       ALIAS_FORMAT='\033[1;31m%s\033[0m'
       DEST_FORMAT='\033[1;31m%s\033[0m'
       VERSION_FORMAT='\033[1;31m%s\033[0m'
@@ -606,7 +606,7 @@ nvm_resolve_alias() {
     local NVM_NODE_PREFIX
     NVM_NODE_PREFIX="$(nvm_node_prefix)"
     case "_$ALIAS" in
-      "∞" | \
+      "_∞" | \
       "_$NVM_IOJS_PREFIX" | "_$NVM_IOJS_PREFIX-" | \
       "_$NVM_NODE_PREFIX" )
         nvm_echo "$ALIAS"
